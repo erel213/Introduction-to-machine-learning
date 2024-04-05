@@ -47,7 +47,13 @@ def apply_bias_trick(X):
     ###########################################################################
     # TODO: Implement the bias trick by adding a column of ones to the data.                             #
     ###########################################################################
-    pass
+    if X.ndim == 1:
+        X = X.reshape(X.shape[0], 1)
+
+    X_columns = X.shape[1]
+    
+    ones_column = np.ones((X.shape[0], 1))
+    X = np.hstack((X, ones_column))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
