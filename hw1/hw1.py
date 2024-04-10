@@ -209,7 +209,15 @@ def find_best_alpha(X_train, y_train, X_val, y_val, iterations):
     ###########################################################################
     # TODO: Implement the function and find the best alpha value.             #
     ###########################################################################
-    pass
+    
+    for i in alphas:
+
+        theta = efficient_gradient_descent(X_train, y_train, [1,1], i, iterations)[0]
+        
+        alpha_dict[i] = compute_cost(X_val, y_val, theta)
+        
+        
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
