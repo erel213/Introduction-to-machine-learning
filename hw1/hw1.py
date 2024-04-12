@@ -3,7 +3,6 @@
 # ID2: 987654321
 #####################
 
-# imports 
 import numpy as np
 import pandas as pd
 
@@ -22,12 +21,8 @@ def preprocess(X,y):
     ###########################################################################
     # TODO: Implement the normalization function.                             #
     ###########################################################################
-    x_mean = np.mean(X, axis=0)
-    x_std = np.std(X, axis=0)
-    y_mean = np.mean(y)
-    y_std = np.std(y)
-    X = (X - x_mean) / x_std
-    y = (y - y_mean) / y_std
+    X = (X - X.min(axis = 0)) / (X.max(axis = 0) - X.min(axis = 0))
+    y = (y - y.min(axis = 0)) / (y.max(axis = 0) - y.min(axis = 0))  
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -48,12 +43,13 @@ def apply_bias_trick(X):
     # TODO: Implement the bias trick by adding a column of ones to the data.                             #
     ###########################################################################
     if X.ndim == 1:
+        
         X = X.reshape(X.shape[0], 1)
 
     X_columns = X.shape[1]
-    
     ones_column = np.ones((X.shape[0], 1))
-    X = np.hstack((X, ones_column))
+    
+    X = np.hstack((ones_column, X))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -77,7 +73,8 @@ def compute_cost(X, y, theta):
     ###########################################################################
     # TODO: Implement the MSE cost function.                                  #
     ###########################################################################
-    J = 1/(X.shape[0]*2) * np.sum((np.dot(X, theta) - y)**2)
+    y_hat = X @ theta
+    J = 0.5 * np.square(y_hat - y).mean()
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -109,9 +106,12 @@ def gradient_descent(X, y, theta, alpha, num_iters):
     ###########################################################################
     # TODO: Implement the gradient descent optimization algorithm.            #
     ###########################################################################
+    
     for i in range(num_iters):
-        theta = theta - alpha / X.shape[0] * X.T @ (X @ theta - y)
-        J_history.append(compute_cost(X, y, theta))
+        
+        J_history.append(compute_cost(X, y, theta))            
+        y_hat = X @ theta
+        theta = theta - (alpha / X.shape[0]) * (X.T @ (y_hat - y))
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -139,7 +139,9 @@ def compute_pinv(X, y):
     ###########################################################################
     # TODO: Implement the pseudoinverse algorithm.                            #
     ###########################################################################
-    pass
+    
+    pinv_theta.append(np.linalg.inv(X.T @ X) @ X.T)
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -169,7 +171,20 @@ def efficient_gradient_descent(X, y, theta, alpha, num_iters):
     ###########################################################################
     # TODO: Implement the efficient gradient descent optimization algorithm.  #
     ###########################################################################
-    pass
+    
+    for i in range(num_iters):
+        
+        J_history.append(compute_cost(X, y, theta))
+        
+        if i > 0:
+
+            if (np.abs(J_history[i] - J_history[i-1])) < 1e-8:
+
+                return theta, J_history
+        
+        y_hat = X @ theta
+        theta = theta - (alpha / X.shape[0]) * (X.T @ (y_hat - y))
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -196,7 +211,13 @@ def find_best_alpha(X_train, y_train, X_val, y_val, iterations):
     ###########################################################################
     # TODO: Implement the function and find the best alpha value.             #
     ###########################################################################
-    pass
+    
+    for i in alphas:
+
+        theta = efficient_gradient_descent(X_train, y_train, [1,1], i, iterations)[0]
+        
+        alpha_dict[i] = compute_cost(X_val, y_val, theta)
+        
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
