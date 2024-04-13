@@ -245,7 +245,29 @@ def forward_feature_selection(X_train, y_train, X_val, y_val, best_alpha, iterat
     #####c######################################################################
     # TODO: Implement the function and find the best alpha value.             #
     ###########################################################################
-    pass
+
+    for i in range(5):
+            
+            min_cost = np.inf
+            best_feature = -1
+    
+            for j in range(X_train.shape[1]):
+
+                theta = np.random.random(len(selected_features) + 1)
+    
+                if j in selected_features:
+    
+                    continue
+    
+                theta = efficient_gradient_descent(X_train[:, selected_features + [j]], y_train, theta, best_alpha, iterations)[0]
+                cost = compute_cost(X_val[:, selected_features + [j]], y_val, theta)
+    
+                if cost < min_cost:
+    
+                    min_cost = cost
+                    best_feature = j
+    
+            selected_features.append(best_feature)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
