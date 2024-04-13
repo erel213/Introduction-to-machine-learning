@@ -139,8 +139,8 @@ def compute_pinv(X, y):
     ###########################################################################
     # TODO: Implement the pseudoinverse algorithm.                            #
     ###########################################################################
-    
-    pinv_theta.append(np.linalg.inv(X.T @ X) @ X.T)
+
+    pinv_theta = np.linalg.inv(X.T @ X) @ X.T @ y
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
