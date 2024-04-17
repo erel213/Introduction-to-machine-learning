@@ -46,7 +46,6 @@ def apply_bias_trick(X):
         
         X = X.reshape(X.shape[0], 1)
 
-    X_columns = X.shape[1]
     ones_column = np.ones((X.shape[0], 1))
     
     X = np.hstack((ones_column, X))
@@ -211,10 +210,11 @@ def find_best_alpha(X_train, y_train, X_val, y_val, iterations):
     ###########################################################################
     # TODO: Implement the function and find the best alpha value.             #
     ###########################################################################
-    
+    np.random.seed(42)
+
     for i in alphas:
 
-        theta = efficient_gradient_descent(X_train, y_train, [1,1], i, iterations)[0]
+        theta = efficient_gradient_descent(X_train, y_train, np.random.random(size = X_train.shape[1]), i, iterations)[0]
         
         alpha_dict[i] = compute_cost(X_val, y_val, theta)
         
@@ -245,7 +245,21 @@ def forward_feature_selection(X_train, y_train, X_val, y_val, best_alpha, iterat
     #####c######################################################################
     # TODO: Implement the function and find the best alpha value.             #
     ###########################################################################
-    pass
+    for i in range(5):
+
+        J = []
+
+        for j in range(X_train.shape[1]):
+
+            columns = [j] + selected_features 
+            theta = efficient_gradient_descent(apply_bias_trick(X_train[:,columns]), 
+                                               y_train, np.random.random(size = len(columns) + 1), 
+                                               best_alpha, iterations)[0]
+            J.append(compute_cost(apply_bias_trick(X_val[:,columns]), y_val, theta))
+
+        selected_features.append(np.argmin(J)) # adding the index with the lowest cost to selected_features
+        X_train = np.delete(X_train, np.argmin(J), axis=1) # removing the column index with the lowest cost from X_train
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -267,8 +281,21 @@ def create_square_features(df):
     ###########################################################################
     # TODO: Implement the function to add polynomial features                 #
     ###########################################################################
-    pass
+    
+    for i in df_poly.columns:
+        
+        for j in df_poly.columns:
+                
+            if i == j:
+                
+                df_poly[i + '^2'] = df_poly[i] ** 2
+
+            else:
+
+                df_poly[i + '*' + j] = df_poly[i] * df_poly[j]
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return df_poly
+
