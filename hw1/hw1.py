@@ -214,7 +214,7 @@ def find_best_alpha(X_train, y_train, X_val, y_val, iterations):
     
     for i in alphas:
 
-        theta = efficient_gradient_descent(X_train, y_train, [1,1], i, iterations)[0]
+        theta = efficient_gradient_descent(X_train, y_train, np.random.random(size = X_train.shape[1]), i, iterations)[0]
         
         alpha_dict[i] = compute_cost(X_val, y_val, theta)
         
@@ -253,14 +253,14 @@ def forward_feature_selection(X_train, y_train, X_val, y_val, best_alpha, iterat
     
             for j in range(X_train.shape[1]):
 
-                theta = np.random.random(len(selected_features) + 1)
+                theta = np.random.random(len(selected_features) + len([j]) + 1)
     
                 if j in selected_features:
     
                     continue
     
-                theta = efficient_gradient_descent(X_train[:, selected_features + [j]], y_train, theta, best_alpha, iterations)[0]
-                cost = compute_cost(X_val[:, selected_features + [j]], y_val, theta)
+                theta = efficient_gradient_descent(apply_bias_trick(X_train[:, selected_features + [j]]), y_train, theta, best_alpha, iterations)[0]
+                cost = compute_cost(apply_bias_trick(X_val[:, selected_features + [j]]), y_val, theta)
     
                 if cost < min_cost:
     
@@ -289,10 +289,14 @@ def create_square_features(df):
     ###########################################################################
     # TODO: Implement the function to add polynomial features                 #
     ###########################################################################
-    for col in df.columns:
-        df_poly[col + '_squared'] = df[col]**2
+    columns = df.columns
+    for col in range(len(columns)):
+        for other_column in range(col, len(columns)):
+            if col == other_column:
+                df_poly[columns[col] + '_squared'] = df[columns[col]] ** 2
+            else:
+                df_poly[columns[col] + '*' + columns[other_column]] = df[columns[col]] * df[columns[other_column]]
     return df_poly
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    return df_poly
