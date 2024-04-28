@@ -210,6 +210,20 @@ class DecisionNode:
         # TODO: Implement the function.                                           #
         ###########################################################################
 
+        current_impurity = self.impurity_func(self.data) # calculating the inpurity of the original dataset
+        feature_impurity = 0 # a variable to calculate the impurity of the dataset after a split
+
+        feature_values = np.unique(self.data[:,feature]) # getting the unique values of the feature
+        
+        for val in feature_values:
+            
+            data_subset = self.data[self.data[:,feature] == val] # creating a subset according to one of the values of the feature
+            subset_weight = len(data_subset) / len(self.data)  
+            feature_impurity += subset_weight * self.impurity_func(data_subset) # adding the impurity of the subset to goodness
+            
+            groups[val] = data_subset # adding the subset
+
+        goodness = current_impurity - feature_impurity
 
         ###########################################################################
         #                             END OF YOUR CODE                            #
