@@ -210,6 +210,10 @@ class DecisionNode:
         # TODO: Implement the function.                                           #
         ###########################################################################
 
+        if self.gain_ratio:
+
+            self.impurity_func = calc_entropy
+
         current_impurity = self.impurity_func(self.data) # calculating the inpurity of the original dataset
         feature_impurity = 0 # a variable to calculate the impurity of the dataset after a split
 
@@ -223,7 +227,13 @@ class DecisionNode:
             
             groups[val] = data_subset # adding the subset
 
-        goodness = current_impurity - feature_impurity
+        if self.gain_ratio:
+
+            goodness = (current_impurity - feature_impurity) / feature_impurity
+
+        else:
+        
+            goodness = current_impurity - feature_impurity
 
         ###########################################################################
         #                             END OF YOUR CODE                            #
