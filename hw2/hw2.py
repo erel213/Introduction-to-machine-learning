@@ -131,7 +131,7 @@ class DecisionNode:
         self.children = [] # array that holds this nodes children
         self.children_values = []
         self.terminal = False # determines if the node is a leaf
-        self.chi = chi 
+        self.chi = chi # holds the chi square p-value (float).
         self.max_depth = max_depth # the maximum allowed depth of the tree
         self.impurity_func = impurity_func
         self.gain_ratio = gain_ratio
@@ -187,7 +187,11 @@ class DecisionNode:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        
+        self.gain_ratio = False
+        self.feature_importance = (len(self.data) / n_total_sample) * self.goodness_of_split(
+            feature = self.feature)[0]
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -251,7 +255,26 @@ class DecisionNode:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        
+        if self.depth == self.max_depth:
+            return
+        if self.chi > 0.05:
+            return
+        
+        goodness = []
+        
+        for i in range(len(self.data[0])):
+        
+            goodness.append(self.goodness_of_split(i)[0])
+
+        self.feature = np.argmax(goodness)
+
+        feature_values = np.unique(self.data[:,self.feature]) # getting the unique values of the feature
+        
+        for val in feature_values: 
+            
+            self.children.append(DecisionNode(self.data[self.data[:,self.feature] == val], self.impurity_func))
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
