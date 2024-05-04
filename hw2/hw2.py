@@ -301,11 +301,34 @@ class DecisionTree:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        # Create a decesision node for the root
+        self.root = DecisionNode(self.data, self.impurity_func, chi=self.chi, max_depth=self.max_depth, gain_ratio=self.gain_ratio)
+
+        # Split the root
+        self.root.split()
+
+        # Recursively split the children of the root
+        self.split_children(self.root)
+
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
+    def split_children(self, node):
+        """
+        Recursively splits the children of a node if the node is not terminal.
+        This function has no return value
+        """
+        ###########################################################################
 
+        if node.terminal:
+            return
+        
+        for child in node.children:
+            child.split()
+            self.split_children(child)
+
+        ###########################################################################
     def predict(self, instance):
         """
         Predict a given instance
@@ -320,7 +343,12 @@ class DecisionTree:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        
+        node = self.root
+
+        while not node.terminal:
+            node = node.children[node.children_values.index(instance[node.feature])]
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
