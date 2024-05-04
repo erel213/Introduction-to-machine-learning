@@ -308,9 +308,6 @@ class DecisionTree:
         # Create a decesision node for the root
         self.root = DecisionNode(self.data, self.impurity_func, chi=self.chi, max_depth=self.max_depth, gain_ratio=self.gain_ratio)
 
-        # Split the root
-        self.root.split()
-
         # Recursively split the children of the root
         self.split_children(self.root)
 
@@ -324,11 +321,9 @@ class DecisionTree:
         This function has no return value
         """
         ###########################################################################
-        
-        if node.goodness_of_split == 0:
+        node.split()
+        if node.goodness_of_split(node.feature)[0] == 0:
             return
-        node.split()        
-        
         for child in node.children:
             self.split_children(child)
 
