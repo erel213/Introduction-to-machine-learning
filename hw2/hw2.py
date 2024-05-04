@@ -197,8 +197,10 @@ class DecisionNode:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        
-        self.feature_importance = (len(self.data) / n_total_sample) * self.parent.goodness_of_split(self.parent.feature)
+        if self.parent is None:
+            return None
+        else:
+            self.feature_importance = (len(self.data) / n_total_sample) * self.parent.goodness_of_split(self.parent.feature)[0]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -263,11 +265,6 @@ class DecisionNode:
         # TODO: Implement the function.                                           #
         ###########################################################################
         
-        #if self.depth == self.max_depth:
-         #   return
-        #if self.chi > 0.05:
-         #   return
-        
         goodness = [] # holds the goodness of split for each feature
         
         for i in range(len(self.data[0,:-1])):
@@ -327,12 +324,12 @@ class DecisionTree:
         This function has no return value
         """
         ###########################################################################
-
-        if node.terminal:
+        
+        node.split()
+        if node.goodness_of_split == 0:
             return
         
         for child in node.children:
-            child.split()
             self.split_children(child)
 
         ###########################################################################
