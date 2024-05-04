@@ -325,9 +325,9 @@ class DecisionTree:
         """
         ###########################################################################
         
-        node.split()
         if node.goodness_of_split == 0:
             return
+        node.split()        
         
         for child in node.children:
             self.split_children(child)
