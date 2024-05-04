@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 ### Chi square table values ###
@@ -255,28 +254,6 @@ class DecisionNode:
         ###########################################################################
         return goodness, groups
     
-    def chi_pruning_condition(self, feature_values):
-        try:
-            if self.chi == 1:
-                return True
-            labels = np.unique(self.data[:,-1])
-            chi_statstic = 0
-            for label in labels:
-                for feature_value in feature_values:
-                    feature_mask = self.data[:,self.feature] == feature_value
-                    label_mask=self.data[:,-1] == label
-                    observerd=len(self.data[feature_mask & label_mask])
-                    label_count=len(self.data[label_mask])
-                    expected=len(self.data[feature_mask]) / len(self.data) * label_count
-                    chi_statstic+=((observerd - expected)**2)/expected
-            
-            # Retrieve chi from chi table
-            degrees_of_freedom = len(feature_values) - 1 
-            
-            return chi_table[degrees_of_freedom][self.chi] < chi_statstic
-        except Exception as exeption:
-            pass
-    
     def split(self):
         """
         Splits the current node according to the self.impurity_func. This function finds
@@ -290,17 +267,14 @@ class DecisionNode:
         ###########################################################################
         
         if self.depth == self.max_depth:
-            self.terminal = True
             return
+        # Execute chi test
+        if self.chi != 1:
+            chi_stat = (self.goodness_of_split(self.feature)[0] * 2) * len(self.data)
+            if chi_stat < chi_table[len(self.data[0])-1][self.chi]:
+                return
         
-        feature_values = np.unique(self.data[:,self.feature]) # gets the unique values of the feature
-        if len(feature_values) <= 1:
-            self.terminal = True
-            return
-        if not self.chi_pruning_condition(feature_values):
-            self.terminal = True
-            return
-
+        
         goodness = [] # holds the goodness of split for each feature
         
         for i in range(len(self.data[0,:-1])):
@@ -309,14 +283,15 @@ class DecisionNode:
 
         self.feature = np.argmax(goodness) # takes the feature with the best goodness of split
 
-        for feature_value in feature_values: 
-            self.add_child(DecisionNode(self.data[self.data[:,self.feature] == feature_value], self.impurity_func), feature_value)
-    
+        feature_values = np.unique(self.data[:,self.feature]) # gets the unique values of the feature
+        
+        for val in feature_values: 
+
+            self.add_child(DecisionNode(self.data[self.data[:,self.feature] == val], self.impurity_func), val)
             
         ###########################################################################
         #                             END OF YOUR CODE                            #
-        ###########################################################################        
-
+        ###########################################################################
 
                     
 class DecisionTree:
@@ -379,13 +354,13 @@ class DecisionTree:
         ###########################################################################
         
         node = self.root
-        try:
+
+        try :
             while node.terminal == False:
                 node = node.children[node.children_values.index(instance[node.feature])]
-        
+            
         except Exception as e:
             pass
-            
 
         ###########################################################################
         #                             END OF YOUR CODE                            #
@@ -475,7 +450,7 @@ def chi_pruning(X_train, X_test):
     # TODO: Implement the function.                                           #
     ###########################################################################
     for chi in [1, 0.5, 0.25, 0.1, 0.05, 0.0001]:
-        tree = DecisionTree(X_train, calc_gini, chi=chi, gain_ratio=True)
+        tree = DecisionTree(X_train, calc_entropy, chi=chi, gain_ratio=True)
         tree.build_tree()
         chi_training_acc.append(tree.calc_accuracy(X_train))
         chi_validation_acc.append(tree.calc_accuracy(X_test))
@@ -500,10 +475,7 @@ def count_nodes(node):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    
-    n_nodes = 1
-    for child in node.children:
-        n_nodes += count_nodes(child)
+    pass
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
