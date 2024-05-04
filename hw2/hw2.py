@@ -76,14 +76,14 @@ def calc_gini(data):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
+        
+    if len(data.shape) == 1:
+        unique_labels = np.unique(data, return_counts=True)[1]
+    else:
+        unique_labels = np.unique(data[:,-1], return_counts=True)[1]
     
-    p =  [] # p - the probabilities for the values of the labels column
-    
-    for i in (np.unique(data[:,-1], return_counts=True)[1]):
-        p.append(i / len(data[:,-1]))
-
-    for i in p:
-        gini += i**2
+    for i in (unique_labels):
+        gini += (i / len(data))**2
 
     gini = 1 - gini
 
@@ -106,14 +106,14 @@ def calc_entropy(data):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    
-    p =  [] # p - the probabilities for the values of the labels column
-    
-    for i in (np.unique(data[:,-1], return_counts=True)[1]):
-        p.append(i / len(data[:,-1]))
+        
+    if len(data.shape) == 1:
+        unique_labels = np.unique(data, return_counts=True)[1]
+    else:
+        unique_labels = np.unique(data[:,-1], return_counts=True)[1]    
 
-    for i in p:
-        entropy -= i * np.log2(i)
+    for i in (unique_labels):
+        entropy -= (i / len(data)) * np.log2(i / len(data))
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -130,6 +130,7 @@ class DecisionNode:
         self.depth = depth # the current depth of the node
         self.children = [] # array that holds this nodes children
         self.children_values = []
+        self.parent = None
         self.terminal = False # determines if the node is a leaf
         self.chi = chi # holds the chi square p-value (float).
         self.max_depth = max_depth # the maximum allowed depth of the tree
@@ -169,6 +170,15 @@ class DecisionNode:
         
         self.children.append(node)
         self.children_values.append(val)
+        
+        node.depth = self.depth + 1 # updating the depth of the child to the depth of the father + 1
+        node.parent = self
+
+        if self.terminal == True:
+            self.terminal = False # updating the father (current node) to not being a leaf (in case its current status is being a leaf)
+        node.terminal = True # updating the child to being a leaf 
+
+        node.max_depth = self.max_depth
 
         ###########################################################################
         #                             END OF YOUR CODE                            #
@@ -188,10 +198,7 @@ class DecisionNode:
         # TODO: Implement the function.                                           #
         ###########################################################################
         
-        self.gain_ratio = False
-        self.feature_importance = (len(self.data) / n_total_sample) * self.goodness_of_split(
-            feature = self.feature)[0]
-
+        self.feature_importance = (len(self.data) / n_total_sample)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -218,7 +225,7 @@ class DecisionNode:
 
             self.impurity_func = calc_entropy
 
-        current_impurity = self.impurity_func(self.data) # calculating the inpurity of the original dataset
+        current_impurity = self.impurity_func(self.data) # calculating the impurity of the original dataset
         feature_impurity = 0 # a variable to calculate the impurity of the dataset after a split
 
         feature_values = np.unique(self.data[:,feature]) # getting the unique values of the feature
@@ -233,7 +240,7 @@ class DecisionNode:
 
         if self.gain_ratio:
 
-            goodness = (current_impurity - feature_impurity) / feature_impurity
+            goodness = (current_impurity - feature_impurity) / self.impurity_func(self.data[:,feature])
 
         else:
         
@@ -256,25 +263,25 @@ class DecisionNode:
         # TODO: Implement the function.                                           #
         ###########################################################################
         
-        if self.depth == self.max_depth:
-            return
-        if self.chi > 0.05:
-            return
+        #if self.depth == self.max_depth:
+         #   return
+        #if self.chi > 0.05:
+         #   return
         
-        goodness = []
+        goodness = [] # holds the goodness of split for each feature
         
-        for i in range(len(self.data[0])):
+        for i in range(len(self.data[0,:-1])):
         
             goodness.append(self.goodness_of_split(i)[0])
 
-        self.feature = np.argmax(goodness)
+        self.feature = np.argmax(goodness) # takes the feature with the best goodness of split
 
-        feature_values = np.unique(self.data[:,self.feature]) # getting the unique values of the feature
+        feature_values = np.unique(self.data[:,self.feature]) # gets the unique values of the feature
         
         for val in feature_values: 
-            
-            self.children.append(DecisionNode(self.data[self.data[:,self.feature] == val], self.impurity_func))
 
+            self.add_child(DecisionNode(self.data[self.data[:,self.feature] == val], self.impurity_func), val)
+            
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -301,7 +308,10 @@ class DecisionTree:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        
+        
+
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
