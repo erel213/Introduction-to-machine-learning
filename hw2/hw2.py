@@ -198,7 +198,7 @@ class DecisionNode:
         # TODO: Implement the function.                                           #
         ###########################################################################
         
-        self.feature_importance = (len(self.data) / n_total_sample)
+        self.feature_importance = (len(self.data) / n_total_sample) * self.parent.goodness_of_split(self.parent.feature)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
