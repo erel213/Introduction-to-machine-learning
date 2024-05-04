@@ -179,6 +179,7 @@ class DecisionNode:
         node.terminal = True # updating the child to being a leaf 
 
         node.max_depth = self.max_depth
+        node.chi = self.chi
 
         ###########################################################################
         #                             END OF YOUR CODE                            #
@@ -265,6 +266,15 @@ class DecisionNode:
         # TODO: Implement the function.                                           #
         ###########################################################################
         
+        if self.depth == self.max_depth:
+            return
+        # Execute chi test
+        if self.chi != 1:
+            chi_stat = (self.goodness_of_split(self.feature)[0] * 2) * len(self.data)
+            if chi_stat < chi_table[len(self.data[0])-1][self.chi]:
+                return
+        
+        
         goodness = [] # holds the goodness of split for each feature
         
         for i in range(len(self.data[0,:-1])):
@@ -345,8 +355,12 @@ class DecisionTree:
         
         node = self.root
 
-        while not node.terminal:
-            node = node.children[node.children_values.index(instance[node.feature])]
+        try :
+            while node.terminal == False:
+                node = node.children[node.children_values.index(instance[node.feature])]
+            
+        except Exception as e:
+            pass
 
         ###########################################################################
         #                             END OF YOUR CODE                            #
@@ -366,7 +380,14 @@ class DecisionTree:
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        # Iterate over the dataset and predict each instance
+
+        correct = 0
+        for i in range(len(dataset)):
+            if self.predict(dataset[i]) == dataset[i][-1]:
+                correct += 1
+        
+        accuracy = correct / len(dataset) * 100
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -395,7 +416,10 @@ def depth_pruning(X_train, X_validation):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        tree = DecisionTree(X_train, calc_gini, max_depth=max_depth, gain_ratio=True)
+        tree.build_tree()
+        training.append(tree.calc_accuracy(X_train))
+        validation.append(tree.calc_accuracy(X_validation))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -425,12 +449,18 @@ def chi_pruning(X_train, X_test):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    for chi in [1, 0.5, 0.25, 0.1, 0.05, 0.0001]:
+        tree = DecisionTree(X_train, calc_entropy, chi=chi, gain_ratio=True)
+        tree.build_tree()
+        chi_training_acc.append(tree.calc_accuracy(X_train))
+        chi_validation_acc.append(tree.calc_accuracy(X_test))
+        depth.append(tree.root.depth)
+        
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
         
-    return chi_training_acc, chi_testing_acc, depth
+    return chi_training_acc, chi_validation_acc, depth
 
 
 def count_nodes(node):
