@@ -243,8 +243,10 @@ class DecisionNode:
             groups[val] = data_subset # adding the subset
 
         if self.gain_ratio:
-
-            goodness = (current_impurity - feature_impurity) / self.impurity_func(self.data[:,feature])
+            if (self.__all_equal(self.data[:,feature])):
+                goodness=0
+            else:
+                goodness = (current_impurity - feature_impurity) / self.impurity_func(self.data[:,feature])
 
         else:
         
@@ -254,6 +256,9 @@ class DecisionNode:
         #                             END OF YOUR CODE                            #
         ###########################################################################
         return goodness, groups
+    
+    def __all_equal(self, arr):
+        return all(x == arr[0] for x in arr)
     
     def chi_pruning_condition(self, feature_values):
         try:
@@ -293,13 +298,6 @@ class DecisionNode:
             self.terminal = True
             return
         
-        feature_values = np.unique(self.data[:,self.feature]) # gets the unique values of the feature
-        if len(feature_values) <= 1:
-            self.terminal = True
-            return
-        if not self.chi_pruning_condition(feature_values):
-            self.terminal = True
-            return
 
         goodness = [] # holds the goodness of split for each feature
         
@@ -308,6 +306,14 @@ class DecisionNode:
             goodness.append(self.goodness_of_split(i)[0])
 
         self.feature = np.argmax(goodness) # takes the feature with the best goodness of split
+        
+        feature_values = np.unique(self.data[:,self.feature]) # gets the unique values of the feature
+        if len(feature_values) <= 1:
+            self.terminal = True
+            return
+        if not self.chi_pruning_condition(feature_values):
+            self.terminal = True
+            return
 
         for feature_value in feature_values: 
             self.add_child(DecisionNode(self.data[self.data[:,self.feature] == feature_value], self.impurity_func), feature_value)
