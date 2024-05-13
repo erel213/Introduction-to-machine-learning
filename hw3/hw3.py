@@ -173,10 +173,11 @@ def normal_pdf(x, mean, std):
     Returns the normal distribution pdf according to the given mean and std for the given x.    
     """
     p = None
+    ###########################################################################                                     #
     ###########################################################################
-    # TODO: Implement the function.                                           #
-    ###########################################################################
-    pass
+    numerator = np.exp(-((x - mean) ** 2) / (2 * std ** 2))
+    denominator = np.sqrt(2 * np.pi * std ** 2)
+    p = numerator / denominator
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
