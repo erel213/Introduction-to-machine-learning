@@ -301,8 +301,6 @@ class MAPClassifier():
         ###########################################################################
         return pred
 
-
-
     def predict1(self, x):
         """
         Predicts the instance class using the 2 distribution objects given in the object constructor.
@@ -341,7 +339,7 @@ def compute_accuracy(test_set, map_classifier):
     ###########################################################################
     correct = 0
     for instance in test_set:
-        if map_classifier.predict(instance[:-1]) == instance[-1]:
+        if map_classifier.predict(instance) == instance[-1]:
             correct += 1
     acc = correct / test_set.shape[0]
     ###########################################################################
