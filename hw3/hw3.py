@@ -229,7 +229,10 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        likelihood = normal_pdf(x, self.mean, self.standart_deviation)
+        feature_likelihood = normal_pdf(x, self.mean, self.standart_deviation)
+        likelihood = 1
+        for i in range(len(feature_likelihood)-1):
+            likelihood *= feature_likelihood[i]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -277,6 +280,30 @@ class MAPClassifier():
         ###########################################################################
     
     def predict(self, x):
+        """
+        Predicts the instance class using the 2 distribution objects given in the object constructor.
+    
+        Input
+            - An instance to predict.
+        Output
+            - 0 if the posterior probability of class 0 is higher and 1 otherwise.
+        """
+        pred = None
+        ###########################################################################
+        # TODO: Implement the function.                                           #
+        ###########################################################################
+        if self.ccd0.get_instance_posterior(x) > self.ccd1.get_instance_posterior(x):
+            pred = 0
+        else:
+            pred = 1
+        ###########################################################################
+        #                             END OF YOUR CODE                            #
+        ###########################################################################
+        return pred
+
+
+
+    def predict1(self, x):
         """
         Predicts the instance class using the 2 distribution objects given in the object constructor.
     
