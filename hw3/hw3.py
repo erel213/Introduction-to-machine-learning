@@ -196,13 +196,14 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.dataset = dataset[dataset[:, -1] == class_value][:,:-1]
-        self.mean = np.mean(self.dataset, axis=0)
-        self.standart_deviation = np.std(self.dataset, axis=0)
+        self.dataset = dataset[:,:-1]
+        self.class_instances = dataset[dataset[:, -1] == class_value][:,:-1]
+        self.mean = np.mean(self.class_instances, axis=0)
+        self.standart_deviation = np.std(self.class_instances, axis=0)
 
         # Storing data for prior probability calculation
-        self.total_instances = self.dataset.shape[0]
-        self.class_instances = self.dataset.shape[0]
+        self.total_instances_length = self.dataset.shape[0]
+        self.class_instances_length = self.class_instances.shape[0]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -215,7 +216,7 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        prior = self.class_instances / self.total_instances
+        prior = self.class_instances_length / self.total_instances_length
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -231,7 +232,7 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         feature_likelihood = normal_pdf(self.dataset[x], self.mean, self.standart_deviation)
         likelihood = 1
-        for i in range(len(feature_likelihood)-1):
+        for i in range(len(feature_likelihood)):
             likelihood *= feature_likelihood[i]
         ###########################################################################
         #                             END OF YOUR CODE                            #
