@@ -176,7 +176,7 @@ def normal_pdf(x, mean, std):
     ###########################################################################                                     #
     ###########################################################################
     numerator = np.exp(-((x - mean) ** 2) / (2 * std ** 2))
-    denominator = np.sqrt((2 * np.pi) ** 0.5 * std)
+    denominator = np.sqrt(2 * np.pi * std ** 2)
     p = numerator / denominator
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -230,10 +230,8 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        feature_likelihood = normal_pdf(self.dataset[x], self.mean, self.standard_deviation)
-        likelihood = 1
-        for i in range(len(feature_likelihood)):
-            likelihood *= feature_likelihood[i]
+        feature_likelihoods = normal_pdf(x, self.mean, self.standard_deviation)
+        likelihood = np.prod(feature_likelihoods)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -317,8 +315,8 @@ def compute_accuracy(test_set, map_classifier):
     # TODO: Implement the function.                                           #
     ###########################################################################
     correct = 0
-    for instance in range(len(test_set)):
-        if map_classifier.predict(instance) == test_set[instance,-1]:
+    for instance in test_set:
+        if map_classifier.predict(instance[:-1]) == instance[-1]:
             correct += 1
     acc = correct / test_set.shape[0]
     ###########################################################################
@@ -398,7 +396,7 @@ class MultiNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        likelihood = multi_normal_pdf(self.dataset[x], self.mean, self.cov_matrix)
+        likelihood = multi_normal_pdf(x, self.mean, self.cov_matrix)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
