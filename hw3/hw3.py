@@ -199,7 +199,7 @@ class NaiveNormalClassDistribution():
         self.dataset = dataset[:,:-1]
         self.class_instances = dataset[dataset[:, -1] == class_value][:,:-1]
         self.mean = np.mean(self.class_instances, axis=0)
-        self.standart_deviation = np.std(self.class_instances, axis=0)
+        self.standard_deviation = np.std(self.class_instances, axis=0)
 
         # Storing data for prior probability calculation
         self.total_instances_length = self.dataset.shape[0]
@@ -230,7 +230,7 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        feature_likelihood = normal_pdf(self.dataset[x], self.mean, self.standart_deviation)
+        feature_likelihood = normal_pdf(self.dataset[x], self.mean, self.standard_deviation)
         likelihood = 1
         for i in range(len(feature_likelihood)):
             likelihood *= feature_likelihood[i]
@@ -341,7 +341,7 @@ def multi_normal_pdf(x, mean, cov):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    numerator = np.exp(-0.5 * np.matmul(np.transpose(x - mean), np.matmul(cov ** (-1), (x - mean))))
+    numerator = np.exp(-0.5 * (np.transpose(x - mean) @ ((cov ** (-1)) @ (x - mean))))
     denom_first_term = (2 * np.pi) ** (-len(mean)/2)
     denom_second_term = np.linalg.det(cov) ** (-0.5)
     denominator = denom_first_term * denom_second_term
@@ -365,8 +365,14 @@ class MultiNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.mean = np.mean(dataset[dataset[:,-1] == class_value])
-        self.cov = np.cov
+        self.dataset = dataset[:,:-1]
+        self.class_instances = dataset[dataset[:, -1] == class_value][:,:-1]
+        self.mean = np.mean(self.class_instances, axis=0)
+        self.cov_matrix = np.cov(self.class_instances, rowvar=False)
+
+        # Storing data for prior probability calculation
+        self.total_instances_length = self.dataset.shape[0]
+        self.class_instances_length = self.class_instances.shape[0]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -379,7 +385,7 @@ class MultiNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        prior = self.class_instances_length / self.total_instances_length
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -393,7 +399,7 @@ class MultiNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        likelihood = multi_normal_pdf(self.dataset[x], self.mean, self.cov_matrix)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -408,7 +414,9 @@ class MultiNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        prior = self.get_prior()
+        likelihood = self.get_instance_likelihood(x)
+        posterior = prior * likelihood
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
