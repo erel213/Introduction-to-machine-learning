@@ -196,13 +196,13 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        class_data = dataset[dataset[:, -1] == class_value][:,:-1]
-        self.mean = np.mean(class_data, axis=0)
-        self.standart_deviation = np.std(class_data, axis=0)
+        self.dataset = dataset[dataset[:, -1] == class_value][:,:-1]
+        self.mean = np.mean(self.dataset, axis=0)
+        self.standart_deviation = np.std(self.dataset, axis=0)
 
         # Storing data for prior probability calculation
-        self.total_instances = dataset.shape[0]
-        self.class_instances = class_data.shape[0]
+        self.total_instances = self.dataset.shape[0]
+        self.class_instances = self.dataset.shape[0]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -229,7 +229,7 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        feature_likelihood = normal_pdf(x, self.mean, self.standart_deviation)
+        feature_likelihood = normal_pdf(self.dataset[x], self.mean, self.standart_deviation)
         likelihood = 1
         for i in range(len(feature_likelihood)-1):
             likelihood *= feature_likelihood[i]
@@ -292,28 +292,6 @@ class MAPClassifier():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        if self.ccd0.get_instance_posterior(x) > self.ccd1.get_instance_posterior(x):
-            pred = 0
-        else:
-            pred = 1
-        ###########################################################################
-        #                             END OF YOUR CODE                            #
-        ###########################################################################
-        return pred
-
-    def predict1(self, x):
-        """
-        Predicts the instance class using the 2 distribution objects given in the object constructor.
-    
-        Input
-            - An instance to predict.
-        Output
-            - 0 if the posterior probability of class 0 is higher and 1 otherwise.
-        """
-        pred = None
-        ###########################################################################
-        # TODO: Implement the function.                                           #
-        ###########################################################################
         posterior0 = self.ccd0.get_instance_posterior(x)
         posterior1 = self.ccd1.get_instance_posterior(x)
         pred = 0 if posterior0 > posterior1 else 1
@@ -338,8 +316,8 @@ def compute_accuracy(test_set, map_classifier):
     # TODO: Implement the function.                                           #
     ###########################################################################
     correct = 0
-    for instance in test_set:
-        if map_classifier.predict(instance) == instance[-1]:
+    for instance in range(len(test_set)):
+        if map_classifier.predict(instance) == test_set[instance,-1]:
             correct += 1
     acc = correct / test_set.shape[0]
     ###########################################################################
@@ -386,7 +364,8 @@ class MultiNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        self.mean = np.mean(dataset[dataset[:,-1] == class_value])
+        self.cov = np.cov
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
