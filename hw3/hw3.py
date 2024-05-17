@@ -341,11 +341,10 @@ def multi_normal_pdf(x, mean, cov):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    numerator = np.exp(-0.5 * (np.transpose(x - mean) @ ((cov ** (-1)) @ (x - mean))))
-    denom_first_term = (2 * np.pi) ** (-len(mean)/2)
-    denom_second_term = np.linalg.det(cov) ** (-0.5)
-    denominator = denom_first_term * denom_second_term
-    pdf = numerator / denominator
+    d = len(mean)
+    exponent = np.exp(-0.5 * np.dot(np.dot(np.transpose(x - mean), (np.linalg.inv(cov))), (x - mean)))
+    cov_det = np.linalg.det(cov) ** (-0.5)
+    pdf = ((2 * np.pi) ** (-d/2)) * cov_det * exponent 
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
