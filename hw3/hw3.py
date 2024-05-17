@@ -515,7 +515,7 @@ class DiscreteNBClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        self.dataset = dataset[:,:-1]
+        self.dataset = dataset
         self.class_instances = dataset[dataset[:, -1] == class_value][:,:-1]
         self.class_instances_length = self.class_instances.shape[0]
         self.total_instances_length = self.dataset.shape[0]
@@ -548,6 +548,15 @@ class DiscreteNBClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
+        likelihood = 1
+        for attribute_index in range(len(x)-1):
+            attribute_mask = self.dataset[:,attribute_index] == x[attribute_index]
+            class_mask = self.dataset[:,-1] == self.class_value
+
+            attribute_count = len(self.dataset[attribute_mask & class_mask])
+            attribute_value_count = len(np.unique(self.dataset[:,attribute_index]))
+            class_count = self.class_instances_length
+            likelihood *= (attribute_count + 1) / (class_count + attribute_value_count)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -563,7 +572,9 @@ class DiscreteNBClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        instance_prior = self.get_prior()
+        instance_likelihood = self.get_instance_likelihood(x)
+        posterior = instance_prior * instance_likelihood
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -584,7 +595,8 @@ class MAPClassifier_DNB():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        self.ccd0 = ccd0
+        self.ccd1 = ccd1
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -602,7 +614,9 @@ class MAPClassifier_DNB():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        posterior0 = self.ccd0.get_instance_posterior(x)
+        posterior1 = self.ccd1.get_instance_posterior(x)
+        pred = 0 if posterior0 > posterior1 else 1
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -620,8 +634,12 @@ class MAPClassifier_DNB():
         acc = None
         ###########################################################################
         # TODO: Implement the function.                                           #
-        ###########################################################################
-        pass
+        ##########################################################################
+        correct = 0
+        for instance_index in range(len(test_set)):
+            if self.predict(test_set[instance_index]) == test_set[instance_index,-1]:
+                correct += 1
+        acc = correct / test_set.shape[0]
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
