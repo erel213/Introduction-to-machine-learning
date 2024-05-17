@@ -196,9 +196,9 @@ class NaiveNormalClassDistribution():
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        class_data = dataset[dataset[:, -1] == class_value]
-        self.mean = np.mean(dataset[dataset[:,-1] == class_value], axis=0)
-        self.standart_deviation = np.std(dataset[dataset[:,-1] == class_value], axis=0)
+        class_data = dataset[dataset[:, -1] == class_value][:,:-1]
+        self.mean = np.mean(class_data, axis=0)
+        self.standart_deviation = np.std(class_data, axis=0)
 
         # Storing data for prior probability calculation
         self.total_instances = dataset.shape[0]
@@ -362,7 +362,11 @@ def multi_normal_pdf(x, mean, cov):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    numerator = np.exp(-0.5 * np.matmul(np.transpose(x - mean), np.matmul(cov ** (-1), (x - mean))))
+    denom_first_term = (2 * np.pi) ** (-len(mean)/2)
+    denom_second_term = np.linalg.det(cov) ** (-0.5)
+    denominator = denom_first_term * denom_second_term
+    pdf = numerator / denominator
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
