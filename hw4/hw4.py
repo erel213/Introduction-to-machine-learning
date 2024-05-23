@@ -40,7 +40,8 @@ def feature_selection(X, y, n_features=5):
     ###########################################################################
     features_dict = {}
     
-    for col in X.columns:
+    for col in X.select_dtypes(include=['number']).columns: # selecting only columns with numeric data types
+      
       features_dict[col] = pearson_correlation(X[col],y)
 
     n_features_sorted_dict = dict(sorted(features_dict.items(), key=lambda item: item[1], reverse=True)[:n_features])
