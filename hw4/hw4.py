@@ -17,7 +17,7 @@ def pearson_correlation( x, y):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    r = np.corrcoef(x,y)[0,1]
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -38,7 +38,13 @@ def feature_selection(X, y, n_features=5):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    features_dict = {}
+    
+    for col in X.columns:
+      features_dict[col] = pearson_correlation(X[col],y)
+
+    n_features_sorted_dict = dict(sorted(features_dict.items(), key=lambda item: item[1], reverse=True)[:n_features])
+    best_features = list(n_features_sorted_dict.keys())
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
