@@ -106,7 +106,28 @@ class LogisticRegressionGD(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        # Initalize random theta vector (weights)
+        self.theta = np.random.rand(X.shape[1])
+        m = X.shape[0] # number of instances
+
+        for i in range(self.n_iter):
+          # Calculate the sigmoid function
+          h = 1/(1 + np.exp(-X.dot(self.theta)))
+          cost = -1/m * np.sum(y*np.log(h) + (1-y)*np.log(1-h))
+          # Add history calculation for cost function and thetas
+          self.Js.append(cost)
+          self.thetas.append(self.theta)
+
+          # Calculate the gradien
+          gradient = 1/m * X.T.dot(h-y)
+          
+          # Update theta
+          self.theta = self.theta - self.eta * gradient
+
+          # Check for convergence
+          if i > 0 and abs(self.Js[i-1] - self.Js[i]) < self.eps:
+            break
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -122,7 +143,7 @@ class LogisticRegressionGD(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        preds = np.round(1/(1 + np.exp(-X.dot(self.theta))))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
