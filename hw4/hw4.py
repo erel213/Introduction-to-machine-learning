@@ -256,7 +256,12 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        
+        self.weights = np.random.rand(self.k)
+        self.mus = np.random.rand(self.k)
+        self.sigmas = np.random.rand(self.k)
+        self.responsibilities = np.zeros((data.shape[0], self.k))
+        self.costs = []
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -268,7 +273,15 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        
+        for i in range (data.shape[0]):
+            for j in range(self.k):
+                self.responsibilities[i,j] = self.weights[j] * norm_pdf(data[i], self.mus[j], self.sigmas[j])
+
+        # Normalize the responsibilities
+        self.responsibilities = self.responsibilities / np.sum(self.responsibilities, axis=1)[:,None]
+                
+      
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -280,7 +293,10 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        for i in range(self.k):
+            self.weights[i] = np.sum(self.responsibilities[:,i])/data.shape[0]
+            self.mus[i] = np.sum(self.responsibilities[:,i]*data)/np.sum(self.responsibilities[:,i])
+            self.sigmas[i] = np.sqrt(np.sum(self.responsibilities[:,i]*(data-self.mus[i])**2)/np.sum(self.responsibilities[:,i]))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
