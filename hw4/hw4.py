@@ -181,7 +181,16 @@ def cross_validation(X, y, folds, algo, random_state):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    
+    # Shuffle the data
+    data = np.column_stack((X,y))
+    np.random.shuffle(data)
+    data = np.array_split(data, folds)
+
+    # Train the data
+    algo.fit(data[0][:,:-1], data[0][:,-1])
+    preds = algo.predict(data[1][:,:-1])
+    cv_accuracy = np.mean(preds == data[1][:,-1])
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
