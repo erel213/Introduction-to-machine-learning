@@ -51,6 +51,33 @@ def feature_selection(X, y, n_features=5):
     ###########################################################################
     return best_features
 
+def apply_bias_trick(X):
+    """
+    Applies the bias trick to the input data.
+
+    Input:
+    - X: Input data (m instances over n features).
+
+    Returns:
+    - X: Input data with an additional column of ones in the
+        zeroth position (m instances over n+1 features).
+    """
+    ###########################################################################
+    # TODO: Implement the bias trick by adding a column of ones to the data.                             #
+    ###########################################################################
+    if X.ndim == 1:
+        
+        X = X.reshape(X.shape[0], 1)
+
+    X_columns = X.shape[1]
+    ones_column = np.ones((X.shape[0], 1))
+    
+    X = np.hstack((ones_column, X))
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+    return X
+
 class LogisticRegressionGD(object):
     """
     Logistic Regression Classifier using gradient descent.
@@ -107,19 +134,24 @@ class LogisticRegressionGD(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         # Initalize random theta vector (weights)
-        self.theta = np.random.rand(X.shape[1])
+        X = apply_bias_trick(X)
+        
+        self.theta = np.random.rand(X.shape[1]) # initialize theta
         m = X.shape[0] # number of instances
 
         for i in range(self.n_iter):
-          # Calculate the sigmoid function
-          h = 1/(1 + np.exp(-X.dot(self.theta)))
-          cost = -1/m * np.sum(y*np.log(h) + (1-y)*np.log(1-h))
+          
+          # Calculate the probability using the sigmoid function
+          p = 1/(1 + np.exp(-X.dot(self.theta)))
+          
+          cost = np.sum(y*np.log(p) + (1-y)*np.log(1-p))
+          
           # Add history calculation for cost function and thetas
           self.Js.append(cost)
           self.thetas.append(self.theta)
 
-          # Calculate the gradien
-          gradient = 1/m * X.T.dot(h-y)
+          # Calculate the gradient
+          gradient = X.T.dot(p-y)
           
           # Update theta
           self.theta = self.theta - self.eta * gradient
@@ -143,6 +175,7 @@ class LogisticRegressionGD(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
+        X = apply_bias_trick(X)
         preds = np.round(1/(1 + np.exp(-X.dot(self.theta))))
         ###########################################################################
         #                             END OF YOUR CODE                            #
