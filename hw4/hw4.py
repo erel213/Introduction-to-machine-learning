@@ -215,15 +215,38 @@ def cross_validation(X, y, folds, algo, random_state):
     # TODO: Implement the function.                                           #
     ###########################################################################
     # Shuffle the data
-    data = np.column_stack((X,y))
-    np.random.shuffle(data)
-    data = np.array_split(data, folds)
+    indices = np.arange(X.shape[0])
+    np.random.shuffle(indices)
 
-    # Train the data
-    algo.fit(data[0][:,:-1], data[0][:,-1])
-    preds = algo.predict(data[1][:,:-1])
-    cv_accuracy = np.mean(preds == data[1][:,-1])
+    X = X[indices]
+    y = y[indices]
 
+    # Split the indices to folds
+    fold_sizes = np.full(folds, X.shape[0] // folds, dtype=int)
+    fold_sizes[:X.shape[0] % folds] += 1
+    current = 0
+    
+    folds_indices = []
+    for fold_size in fold_sizes:
+        start, stop = current, current + fold_size
+        folds_indices.append(indices[start:stop])
+        current = stop
+
+    fold_accuracy = []
+
+    # Create the training and validation sets for each fold
+    for i in range(folds):
+        validation_indices = folds_indices[i]
+        training_indices = np.hstack([folds_indices[j] for j in range(folds) if j != i])
+        
+        X_train, X_val = X[training_indices], X[validation_indices]
+        y_train, y_val = y[training_indices], y[validation_indices]
+
+        algo.fit(X_train, y_train)
+        y_pred = algo.predict(X_val)
+        fold_accuracy.append((np.sum(y_pred == y_val))/len(y_val))
+
+    cv_accuracy = np.mean(fold_accuracy)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
