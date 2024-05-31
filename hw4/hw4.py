@@ -304,7 +304,17 @@ class EM(object):
         self.sigmas = None
         self.costs = None
 
-    # initial guesses for parameters
+    def generate_random_numbers_sum_to_one(self, k):
+        # Generate k random numbers
+        random_numbers = np.random.rand(k)
+        
+        # Normalize the numbers so that they sum to 1
+        random_numbers /= random_numbers.sum()
+        
+        return random_numbers
+        
+        # initial guesses for parameters
+    
     def init_params(self, data):
         """
         Initialize distribution params
@@ -313,7 +323,7 @@ class EM(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         
-        self.weights = np.random.rand(self.k)
+        self.weights = self.generate_random_numbers_sum_to_one(self.k)
         self.mus = np.random.rand(self.k)
         self.sigmas = np.random.rand(self.k)
         self.responsibilities = np.zeros((data.shape[0], self.k))
@@ -321,6 +331,7 @@ class EM(object):
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
+
 
     def expectation(self, data):
         """
