@@ -340,8 +340,8 @@ class EM(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         self.weights = self.responsibilities.sum(axis = 0) / len(data)
-        self.mus = np.sum(self.responsibilities * data, axis = 0) / (self.weights * len(data))
-        self.sigmas = np.sqrt(np.sum(self.responsibilities * np.square(data - self.mus), axis = 0) / (self.weights * len(data)))
+        self.mus = np.sum(self.responsibilities * data.reshape(-1,1), axis = 0) / (self.weights * len(data))
+        self.sigmas = np.sqrt(np.sum(self.responsibilities * np.square(data.reshape(-1,1) - self.mus), axis = 0) / (self.weights * len(data)))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -404,10 +404,9 @@ def gmm_pdf(data, weights, mus, sigmas):
     k = len(weights)
 
     pdf = np.zeros_like(data)
-    
     for i in range(k):
         pdf += weights[i] * norm_pdf(data, mus[i], sigmas[i])
-
+        
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -428,7 +427,58 @@ class NaiveBayesGaussian(object):
     def __init__(self, k=1, random_state=1991):
         self.k = k
         self.random_state = random_state
+        
         self.prior = None
+        self.class_value = None
+        self.weights = None
+        self.mus = None
+        self.sigmas = None
+
+    def get_prior(self, y):
+            
+        return len(y[y == self.class_value]) / len(y)
+    
+    def create_dist_params(self, X):
+        
+        for i in range(X.shape[1]):
+            
+            model = EM(k = self.k)
+            model.fit(X[:,i])
+            self.weights, self.mus, self.sigmas = model.get_dist_params()
+
+    def get_instance_likelihood(self, x):
+        """
+        Returns the likelihhod porbability of the instance under the class according to the dataset distribution.
+        """
+        likelihood = None
+        ###########################################################################
+        # TODO: Implement the function.                                           #
+        ###########################################################################
+        feature_likelihoods = gmm_pdf(x, self.weights, self.mus, self.sigmas)
+        
+        likelihood = np.prod(feature_likelihoods)
+        ###########################################################################
+        #                             END OF YOUR CODE                            #
+        ###########################################################################
+        return likelihood
+    
+    def get_instance_posterior(self, x):
+        
+        """
+        Returns the posterior porbability of the instance under the class according to the dataset distribution.
+        * Ignoring p(x)
+        """
+        posterior = None
+        ###########################################################################
+        # TODO: Implement the function.                                           #
+        ###########################################################################
+        prior = self.get_prior(class_value = self.class_value)
+        likelihood = self.get_instance_likelihood(x)
+        posterior = prior * likelihood
+        ###########################################################################
+        #                             END OF YOUR CODE                            #
+        ###########################################################################
+        return posterior
 
     def fit(self, X, y):
         """
@@ -445,7 +495,7 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        self.create_dist_params()
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
