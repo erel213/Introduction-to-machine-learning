@@ -51,33 +51,6 @@ def feature_selection(X, y, n_features=5):
     ###########################################################################
     return best_features
 
-def apply_bias_trick(X):
-    """
-    Applies the bias trick to the input data.
-
-    Input:
-    - X: Input data (m instances over n features).
-
-    Returns:
-    - X: Input data with an additional column of ones in the
-        zeroth position (m instances over n+1 features).
-    """
-    ###########################################################################
-    # TODO: Implement the bias trick by adding a column of ones to the data.                             #
-    ###########################################################################
-    if X.ndim == 1:
-        
-        X = X.reshape(X.shape[0], 1)
-
-    X_columns = X.shape[1]
-    ones_column = np.ones((X.shape[0], 1))
-    
-    X = np.hstack((ones_column, X))
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
-    return X
-
 class LogisticRegressionGD(object):
     """
     Logistic Regression Classifier using gradient descent.
@@ -108,6 +81,19 @@ class LogisticRegressionGD(object):
         self.Js = []
         self.thetas = []
 
+    def apply_bias_trick(self, X):
+
+        if X.ndim == 1:
+            
+            X = X.reshape(X.shape[0], 1)
+
+        X_columns = X.shape[1]
+        ones_column = np.ones((X.shape[0], 1))
+        
+        X = np.hstack((ones_column, X))
+
+        return X
+
     def fit(self, X, y):
         """
         Fit training data (the learning phase).
@@ -134,7 +120,7 @@ class LogisticRegressionGD(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         # Initalize random theta vector (weights)
-        X = apply_bias_trick(X)
+        X = self.apply_bias_trick(X)
         
         self.theta = np.random.rand(X.shape[1]) # initialize theta
         m = X.shape[0] # number of instances
@@ -142,19 +128,18 @@ class LogisticRegressionGD(object):
         for i in range(self.n_iter):
           
           # Calculate the probability using the sigmoid function
-          p = 1/(1 + np.exp(-X.dot(self.theta)))
-          
-          cost = np.sum(y*np.log(p) + (1-y)*np.log(1-p))
-          
+          p = 1/(1 + np.exp(-X @ self.theta))
+
+          # Calculate the gradient
+          gradient = X.T @ (p-y)
+
+          # Update theta
+          self.theta = self.theta - self.eta * gradient
+
+          cost = -1/m * np.sum(y@np.log(p) + (1-y)@np.log(1-p))
           # Add history calculation for cost function and thetas
           self.Js.append(cost)
           self.thetas.append(self.theta)
-
-          # Calculate the gradient
-          gradient = X.T.dot(p-y)
-          
-          # Update theta
-          self.theta = self.theta - self.eta * gradient
 
           # Check for convergence
           if i > 0 and abs(self.Js[i-1] - self.Js[i]) < self.eps:
@@ -175,8 +160,12 @@ class LogisticRegressionGD(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        X = apply_bias_trick(X)
-        preds = np.round(1/(1 + np.exp(-X.dot(self.theta))))
+        X = self.apply_bias_trick(X)
+
+        p = 1 / (1 + np.exp(-X @ self.theta))
+
+        preds = (p >= 0.5).astype(int)
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -321,17 +310,13 @@ class EM(object):
         """
         ###########################################################################
         # TODO: Implement the function.                                           #
-        ###########################################################################
-        
+        ###########################################################################        
         self.weights = self.generate_random_numbers_sum_to_one(self.k)
         self.mus = np.random.rand(self.k)
         self.sigmas = np.random.rand(self.k)
-        self.responsibilities = np.zeros((data.shape[0], self.k))
-        self.costs = []
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
-
 
     def expectation(self, data):
         """
@@ -340,15 +325,9 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        
-        for i in range (data.shape[0]):
-            for j in range(self.k):
-                self.responsibilities[i,j] = self.weights[j] * norm_pdf(data[i], self.mus[j], self.sigmas[j])
-
-        # Normalize the responsibilities
-        self.responsibilities = self.responsibilities / np.sum(self.responsibilities, axis=1)[:,None]
-                
-      
+        self.responsibilities = np.empty((len(data), self.k))
+        for i in range(len(data)):
+          self.responsibilities[i] = self.weights * norm_pdf(data[i], self.mus, self.sigmas) / np.sum(self.weights * norm_pdf(data[i], self.mus, self.sigmas))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -360,10 +339,9 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        for i in range(self.k):
-            self.weights[i] = np.sum(self.responsibilities[:,i])/data.shape[0]
-            self.mus[i] = np.sum(self.responsibilities[:,i]*data)/np.sum(self.responsibilities[:,i])
-            self.sigmas[i] = np.sqrt(np.sum(self.responsibilities[:,i]*(data-self.mus[i])**2)/np.sum(self.responsibilities[:,i]))
+        self.weights = self.responsibilities.sum(axis = 0) / len(data)
+        self.mus = np.sum(self.responsibilities * data, axis = 0) / (self.weights * len(data))
+        self.sigmas = np.sqrt(np.sum(self.responsibilities * np.square(data - self.mus), axis = 0) / (self.weights * len(data)))
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -380,7 +358,24 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        self.init_params(data)
+        self.costs = []
+
+        for iter in range(self.n_iter):
+            
+            self.expectation(data)
+            self.maximization(data)
+            
+            likelihood = []
+            
+            for i, x in enumerate(data):
+                likelihood.append(-np.log(self.weights * norm_pdf(x, self.mus, self.sigmas)))
+            
+            self.costs.append(np.sum(likelihood))
+                        
+            # Check for convergence
+            if iter > 0 and abs(self.costs[iter-1] - self.costs[iter]) < self.eps:
+              break
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -405,8 +400,14 @@ def gmm_pdf(data, weights, mus, sigmas):
     pdf = None
     ###########################################################################
     # TODO: Implement the function.                                           #
-    ###########################################################################
-    pass
+    ###########################################################################   
+    k = len(weights)
+
+    pdf = np.zeros_like(data)
+    
+    for i in range(k):
+        pdf += weights[i] * norm_pdf(data, mus[i], sigmas[i])
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
