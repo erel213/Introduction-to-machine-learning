@@ -274,12 +274,12 @@ class EM(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
         
-        for i in range (data.shape[0]):
-            for j in range(self.k):
-                self.responsibilities[i,j] = self.weights[j] * norm_pdf(data[i], self.mus[j], self.sigmas[j])
+        for i in range(data.shape[0]):
+          for j in range(self.k):
+            self.responsibilities[i,j] = self.weights[j] * norm_pdf(data[i], self.mus[j], self.sigmas[j])
 
         # Normalize the responsibilities
-        self.responsibilities = self.responsibilities / np.sum(self.responsibilities, axis=1)[:,None]
+        self.responsibilities = self.responsibilities / np.sum(self.responsibilities, axis=1)[:, None]
                 
       
         ###########################################################################
@@ -313,7 +313,14 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        self.init_params(data)
+        for i in range(self.n_iter):
+            self.expectation(data)
+            self.maximization(data)
+            cost = -np.sum(np.log(np.sum(self.responsibilities, axis=1)))
+            self.costs.append(cost)
+            if i > 0 and abs(self.costs[i-1] - self.costs[i]) < self.eps:
+                break
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -339,7 +346,7 @@ def gmm_pdf(data, weights, mus, sigmas):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    pdf = np.sum([weights[i]*norm_pdf(data, mus[i], sigmas[i]) for i in range(len(weights))], axis=0)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -377,7 +384,16 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        self.prior = np.zeros(len(np.unique(y)))
+        for label in np.unique(y):
+            self.prior[label] = len((X[y == label])) / X.shape[0]
+        
+        # Use EM to learn the distribution
+        self.gaussians = {}
+        for i in range(len(self.prior)):
+            self.gaussians[i] = EM(k=self.k, random_state=self.random_state)
+            self.gaussians[i].fit(X[:,i])
+        
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -393,7 +409,21 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        pass
+        # Calculate the likelihood based on each gaussian and label
+        likelihood = {}
+        for i in range(len(self.prior)):
+            # Calculate the likelihood
+            weights, mus, sigmas = self.gaussians[i].get_dist_params()
+            likelihood = gmm_pdf(X, weights, mus, sigmas)
+
+        # Calculate the posterior
+        posterior = np.zeros((X.shape[0], len(self.prior)))
+        for i, label in enumerate(self.prior):
+            posterior[:,i] = np.dot(self.prior[i], np.transpose(likelihood)[i])
+
+        # Predict the label
+        preds = np.argmax(posterior, axis=1)
+        
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -432,7 +462,17 @@ def model_evaluation(x_train, y_train, x_test, y_test, k, best_eta, best_eps):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    # Logistic Regression
+    lr = LogisticRegressionGD(eta=best_eta, eps=best_eps)
+    lr.fit(x_train, y_train)
+    lor_train_acc = np.mean(lr.predict(x_train) == y_train)
+    lor_test_acc = np.mean(lr.predict(x_test) == y_test)
+
+    # Naive Bayes
+    nb = NaiveBayesGaussian(k=k)
+    nb.fit(x_train, y_train)
+    bayes_train_acc = np.mean(nb.predict(x_train) == y_train)
+    bayes_test_acc = np.mean(nb.predict(x_test) == y_test)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
