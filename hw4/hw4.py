@@ -434,16 +434,19 @@ class NaiveBayesGaussian(object):
     def __init__(self, k=1, random_state=1991):
         self.k = k
         self.random_state = random_state
-        
-        self.prior = None
-        self.class_value = None
-        self.weights = None
-        self.mus = None
-        self.sigmas = None
+  
 
-    def get_prior(self, y):
-            
-        return len(y[y == self.class_value]) / len(y)
+    def calculate_prior(self, y):
+        """
+        Calculate the prior based on the dataset distribution.
+        """
+        distinict_y = np.unique(y)
+        prior = np.zeros(len(distinict_y))
+        for i in range(prior):
+            prior[i] = len(y[y == distinict_y[i]]) / len(y)
+          
+        return prior
+  
     
     def create_dist_params(self, X):
         
@@ -451,7 +454,8 @@ class NaiveBayesGaussian(object):
             
             model = EM(k = self.k)
             model.fit(X[:,i])
-            self.weights, self.mus, self.sigmas = model.get_dist_params()
+            weights, mus, sigmas = model.get_dist_params()
+            return (weights, mus, sigmas)
 
     def get_instance_likelihood(self, x):
         """
@@ -469,23 +473,23 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         return likelihood
     
-    def get_instance_posterior(self, x):
+    # def get_instance_posterior(self, x):
         
-        """
-        Returns the posterior porbability of the instance under the class according to the dataset distribution.
-        * Ignoring p(x)
-        """
-        posterior = None
-        ###########################################################################
-        # TODO: Implement the function.                                           #
-        ###########################################################################
-        prior = self.get_prior(y = self.class_value)
-        likelihood = self.get_instance_likelihood(x)
-        posterior = prior * likelihood
-        ###########################################################################
-        #                             END OF YOUR CODE                            #
-        ###########################################################################
-        return posterior
+    #     """
+    #     Returns the posterior porbability of the instance under the class according to the dataset distribution.
+    #     * Ignoring p(x)
+    #     """
+    #     posterior = None
+    #     ###########################################################################
+    #     # TODO: Implement the function.                                           #
+    #     ###########################################################################
+    #     prior = self.get_prior(y = self.class_value)
+    #     likelihood = self.get_instance_likelihood(x)
+    #     posterior = prior * likelihood
+    #     ###########################################################################
+    #     #                             END OF YOUR CODE                            #
+    #     ###########################################################################
+    #     return posterior
 
     def fit(self, X, y):
         """
@@ -502,13 +506,7 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        # initialize class props
-        self.class_value = np.unique(y)
-
-        self.prior = np.zeros(len(np.unique(y)))
-        for label in np.unique(y):
-            self.prior[label] = len((X[y == label])) / X.shape[0]
-        
+        self.calculate_prior
         # Use EM (create_dist_params) to learn the distribution
         self.create_dist_params(X)
         ###########################################################################
@@ -529,10 +527,11 @@ class NaiveBayesGaussian(object):
         preds = []
         for x in X:
             posteriors = []
-            for label in self.class_value:
-                self.class_value = label
-                posteriors.append(self.get_instance_posterior(x))
-            preds.append(np.argmax(posteriors))
+            for i in range(len(self.class_value)):
+                prior = self.get_prior(self.class_value[i])
+                likelihood = self.get_instance_likelihood(x)
+                posteriors.append(prior * likelihood)
+            preds.append(self.class_value[np.argmax(posteriors)])
         
         ###########################################################################
         #                             END OF YOUR CODE                            #
