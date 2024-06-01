@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+np.set_printoptions(precision=30, suppress=False)
 
 def pearson_correlation( x, y):
     """
@@ -257,7 +258,10 @@ def norm_pdf(data, mu, sigma):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    p = 1/(sigma*np.sqrt(2*np.pi)) * np.exp(-0.5*((data-mu)/sigma)**2)
+    epsilon = 1 * 10 ** -5
+    numerator = epsilon if np.any(np.exp(-((data - mu) ** 2) / (2 * sigma ** 2)) == 0) else np.exp(-((data - mu) ** 2) / (2 * sigma ** 2))
+    denominator = np.sqrt(2 * np.pi * sigma ** 2)
+    p = numerator / denominator
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -375,8 +379,9 @@ class EM(object):
             
             likelihood = []
             
-            for i, x in enumerate(data):
-                likelihood.append(-np.log(self.weights * norm_pdf(x, self.mus, self.sigmas)))
+            for x in data:
+                for j in range(len(self.weights)):    
+                  likelihood.append(-np.log(self.weights[j]) - np.log(norm_pdf(x, self.mus[j], self.sigmas[j])))
             
             self.costs.append(np.sum(likelihood))
                         
@@ -440,6 +445,7 @@ class NaiveBayesGaussian(object):
         self.weights = []
         self.mus = []
         self.sigmas = []
+        self.class_values = None
     
     def create_class_datasets(self, X, y):
         
@@ -463,7 +469,7 @@ class NaiveBayesGaussian(object):
             self.mus.append(model.get_dist_params()[1])
             self.sigmas.append(model.get_dist_params()[2])
 
-    def get_instance_likelihood(self, x):
+    def get_instance_likelihood(self, x, weights, mus, sigmas):
         """
         Returns the likelihhod porbability of the instance under the class according to the dataset distribution.
         """
@@ -472,7 +478,7 @@ class NaiveBayesGaussian(object):
         # TODO: Implement the function.                                           #
         ###########################################################################
        
-        feature_likelihoods = gmm_pdf(x)
+        feature_likelihoods = gmm_pdf(x, weights, mus, sigmas)
         
         likelihood = np.prod(feature_likelihoods)
         ###########################################################################
@@ -495,7 +501,8 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        
+        self.class_values = np.unique(y)
+
         # seperate data by classes
         self.create_class_datasets(X, y)
 
@@ -527,11 +534,11 @@ class NaiveBayesGaussian(object):
         preds = []
         for x in X:
             posteriors = []
-            for i in range(len(self.class_value)):
-                prior = self.get_prior(self.class_value[i])
-                likelihood = self.get_instance_likelihood(x)
+            for i in range(len(self.class_values)):
+                prior = self.prior[i]
+                likelihood = self.get_instance_likelihood(x, weights= self.weights[i], mus=self.mus[i], sigmas=self.sigmas[i])
                 posteriors.append(prior * likelihood)
-            preds.append(self.class_value[np.argmax(posteriors)])
+            preds.append(self.class_values[np.argmax(posteriors)])
         
         ###########################################################################
         #                             END OF YOUR CODE                            #
@@ -604,7 +611,35 @@ def generate_datasets():
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    # Generate dataset for Naive Bayes
+    mean1_a = [1, 2, 3]
+    cov1_a = [[1, 0.1, 0.1], [0.1, 1, 0.1], [0.1, 0.1, 1]]
+    mean2_a = [7, 8, 9]
+    cov2_a = [[1, -0.1, -0.1], [-0.1, 1, -0.1], [-0.1, -0.1, 1]]
+
+    class1_a = multivariate_normal.rvs(mean=mean1_a, cov=cov1_a, size=100)
+    class2_a = multivariate_normal.rvs(mean=mean2_a, cov=cov2_a, size=100)
+
+    labels1_a = np.zeros((100, 1))
+    labels2_a = np.ones((100, 1))
+
+    dataset_a_features = np.vstack((class1_a, class2_a))
+    dataset_a_labels = np.vstack((labels1_a, labels2_a))
+
+    # Generate dataset for Logistic Regression
+    mean1_b = [1, 1, 1]
+    cov1_b = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    mean2_b = [5, 5, 5]
+    cov2_b = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+
+    class1_b = multivariate_normal.rvs(mean=mean1_b, cov=cov1_b, size=100)
+    class2_b = multivariate_normal.rvs(mean=mean2_b, cov=cov2_b, size=100)
+
+    labels1_b = np.zeros((100, 1))
+    labels2_b = np.ones((100, 1))
+
+    dataset_b_features = np.vstack((class1_b, class2_b))
+    dataset_b_labels = np.vstack((labels1_b, labels2_b))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
