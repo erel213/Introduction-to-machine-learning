@@ -434,28 +434,34 @@ class NaiveBayesGaussian(object):
     def __init__(self, k=1, random_state=1991):
         self.k = k
         self.random_state = random_state
-  
-
-    def calculate_prior(self, y):
-        """
-        Calculate the prior based on the dataset distribution.
-        """
-        distinict_y = np.unique(y)
-        prior = np.zeros(len(distinict_y))
-        for i in range(len(distinict_y)):
-            prior[i] = np.sum(y[y == distinict_y[i]]) / len(y)
-          
-        return prior
-  
+        
+        self.class_datasets = []
+        self.prior = None
+        self.weights = []
+        self.mus = []
+        self.sigmas = []
     
+    def create_class_datasets(self, X, y):
+        
+        # create a unified dataset
+        dataset = np.hstack([X, y.reshape([-1,1])]) 
+        
+        class_values = np.unique(y) 
+        
+        # seperate to different datasets by class value
+
+        for i, class_value in enumerate(class_values):
+            self.class_datasets.append(dataset[dataset[:,-1] == class_value])
+
     def create_dist_params(self, X):
         
         for i in range(X.shape[1]):
             
             model = EM(k = self.k)
             model.fit(X[:,i])
-            weights, mus, sigmas = model.get_dist_params()
-            return (weights, mus, sigmas)
+            self.weights.append(model.get_dist_params()[0])
+            self.mus.append(model.get_dist_params()[1])
+            self.sigmas.append(model.get_dist_params()[2])
 
     def get_instance_likelihood(self, x):
         """
@@ -465,7 +471,8 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        feature_likelihoods = gmm_pdf(x, self.weights, self.mus, self.sigmas)
+       
+        feature_likelihoods = gmm_pdf(x)
         
         likelihood = np.prod(feature_likelihoods)
         ###########################################################################
@@ -473,24 +480,6 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         return likelihood
     
-    # def get_instance_posterior(self, x):
-        
-    #     """
-    #     Returns the posterior porbability of the instance under the class according to the dataset distribution.
-    #     * Ignoring p(x)
-    #     """
-    #     posterior = None
-    #     ###########################################################################
-    #     # TODO: Implement the function.                                           #
-    #     ###########################################################################
-    #     prior = self.get_prior(y = self.class_value)
-    #     likelihood = self.get_instance_likelihood(x)
-    #     posterior = prior * likelihood
-    #     ###########################################################################
-    #     #                             END OF YOUR CODE                            #
-    #     ###########################################################################
-    #     return posterior
-
     def fit(self, X, y):
         """
         Fit training data.
@@ -506,10 +495,20 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        prior = self.calculate_prior(y)
+        
+        # seperate data by classes
+        self.create_class_datasets(X, y)
 
-        # Use EM (create_dist_params) to learn the distribution
-        self.create_dist_params(X)
+        # calculate prior for each class
+        self.prior = [len(self.class_datasets[i])/len(y) for i in range(len(self.class_datasets))]
+
+        for i in self.class_datasets:
+            
+          self.create_dist_params(i[:,:-1])
+
+        # calculate likelihood for each class
+
+
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
