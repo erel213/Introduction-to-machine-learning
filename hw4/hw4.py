@@ -325,7 +325,8 @@ class EM(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        
+        self.responsibilities = np.zeros((data.shape[0], self.k))
+
         for i in range(data.shape[0]):
           for j in range(self.k):
             self.responsibilities[i,j] = self.weights[j] * norm_pdf(data[i], self.mus[j], self.sigmas[j])
@@ -478,7 +479,7 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        prior = self.get_prior(class_value = self.class_value)
+        prior = self.get_prior(y = self.class_value)
         likelihood = self.get_instance_likelihood(x)
         posterior = prior * likelihood
         ###########################################################################
@@ -501,16 +502,15 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
+        # initialize class props
+        self.class_value = np.unique(y)
+
         self.prior = np.zeros(len(np.unique(y)))
         for label in np.unique(y):
             self.prior[label] = len((X[y == label])) / X.shape[0]
         
-        # Use EM to learn the distribution
-        self.gaussians = {}
-        for i in range(len(self.prior)):
-            self.gaussians[i] = EM(k=self.k, random_state=self.random_state)
-            self.gaussians[i].fit(X[:,i])
-        
+        # Use EM (create_dist_params) to learn the distribution
+        self.create_dist_params(X)
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -526,20 +526,13 @@ class NaiveBayesGaussian(object):
         ###########################################################################
         # TODO: Implement the function.                                           #
         ###########################################################################
-        # Calculate the likelihood based on each gaussian and label
-        likelihood = {}
-        for i in range(len(self.prior)):
-            # Calculate the likelihood
-            weights, mus, sigmas = self.gaussians[i].get_dist_params()
-            likelihood = gmm_pdf(X, weights, mus, sigmas)
-
-        # Calculate the posterior
-        posterior = np.zeros((X.shape[0], len(self.prior)))
-        for i, label in enumerate(self.prior):
-            posterior[:,i] = np.dot(self.prior[i], np.transpose(likelihood)[i])
-
-        # Predict the label
-        preds = np.argmax(posterior, axis=1)
+        preds = []
+        for x in X:
+            posteriors = []
+            for label in self.class_value:
+                self.class_value = label
+                posteriors.append(self.get_instance_posterior(x))
+            preds.append(np.argmax(posteriors))
         
         ###########################################################################
         #                             END OF YOUR CODE                            #
