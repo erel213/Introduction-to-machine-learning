@@ -12,12 +12,13 @@ def get_random_centroids(X, k):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    row_idx = np.random.choice(a = X.shape[0], size = k, replace = False)
+    centroids = X[row_idx]
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     # make sure you return a numpy array
-    return np.asarray(centroids).astype(np.float) 
+    return np.asarray(centroids).astype(np.float64) 
 
 def lp_distance(X, centroids, p=2):
     '''
@@ -34,7 +35,11 @@ def lp_distance(X, centroids, p=2):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    for centroid in centroids:
+
+        distances.append((np.abs(X - centroid) ** p).sum(axis = 1))
+
+    distances = np.asarray(distances)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -57,7 +62,19 @@ def kmeans(X, k, p ,max_iter=100):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    previous_centroids = centroids
+    for i in range(max_iter):
+
+        distances = lp_distance(X, centroids, p)
+        classes = distances.argmin(axis = 0)
+
+        for j, centroid in enumerate(centroids):
+
+            centroid[:] = X[classes == j].mean(axis = 0)
+
+        if np.all(centroids == previous_centroids):
+            break
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
