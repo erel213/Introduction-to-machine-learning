@@ -98,7 +98,23 @@ def kmeans_pp(X, k, p ,max_iter=100):
     ###########################################################################
     # TODO: Implement the function.                                           #
     ###########################################################################
-    pass
+    
+    centroids = []
+    centroids.append(get_random_centroids(X, 1))  # choosing a uniformly random centroid
+        
+    for i in range(k-1):
+        
+        raw_distances = lp_distance(X, centroids, p) # compute the distances of each point to all centroids
+        distances = raw_distances.min(axis = 0) # compute the distance of each point to its nearest centroid
+        squared_distances = distances ** 2 
+        total_squared_distances = squared_distances.sum()
+        weights = squared_distances / total_squared_distances
+        row_idx = np.random.choice(a = X.shape[0], size = 1, p = weights)
+        centroids.append(X[row_idx])
+    
+    centroids = np.asarray(centroids).astype(np.float64).reshape(k,3)
+    centroids, classes = kmeans(X, k, p, max_iter)
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
